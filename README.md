@@ -1,0 +1,1 @@
+# ConectaLojas-APP-Instalador
