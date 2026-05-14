@@ -236,6 +236,8 @@
                 const el = document.getElementById('versionInfo');
                 if (data) {
                     el.textContent = `Versão ${data.version} · Publicado em ${data.date}`;
+                    // Cache-bust no link do APK pra evitar baixar versão antiga
+                    document.getElementById('downloadBtn').href = 'ConectaLojas.apk?v=' + encodeURIComponent(data.version);
                 } else {
                     el.textContent = '';
                 }
