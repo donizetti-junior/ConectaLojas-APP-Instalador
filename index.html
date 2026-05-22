@@ -173,7 +173,7 @@
         <h1>ConectaLojas</h1>
         <p class="subtitle">Plataforma de Conexão entre Lojistas e Clientes</p>
 
-        <a href="ConectaLojas.apk" class="download-btn" id="downloadBtn">
+        <a href="ConectaLojas.apk" download="ConectaLojas.apk" class="download-btn" id="downloadBtn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -181,6 +181,14 @@
             </svg>
             Baixar para Android
         </a>
+
+        <!-- Fallback: alguns browsers embarcados (Instagram/Facebook/WhatsApp) bloqueiam
+             download de APK. O texto so aparece se a deteccao do user-agent confirmar. -->
+        <p id="inAppWarn" style="display:none;margin-top:12px;font-size:13px;color:#92400e;background:#fef3c7;padding:10px 12px;border-radius:10px;line-height:1.4;text-align:left;">
+            <strong>Voce abriu pelo navegador interno do app?</strong><br>
+            Alguns aplicativos (Instagram, WhatsApp, Facebook) bloqueiam o download de APKs.
+            Toque nos 3 pontinhos do canto e escolha <strong>"Abrir no navegador"</strong> (Chrome ou Samsung Internet).
+        </p>
 
         <div class="version-info" id="versionInfo">Carregando versão...</div>
 
@@ -227,6 +235,13 @@
         if (isIOS) {
             document.getElementById('iosNotice').style.display = 'block';
             document.getElementById('downloadBtn').style.opacity = '0.5';
+        }
+
+        // Detecta in-app browsers conhecidos por bloquear download de APK.
+        // FBAN/FBAV = Facebook, Instagram = IG, WhatsApp = WhatsApp, etc.
+        const isInAppBrowser = /FBAN|FBAV|Instagram|WhatsApp|Line\/|FB_IAB|MicroMessenger|Twitter|TikTok/i.test(ua);
+        if (isInAppBrowser && !isIOS) {
+            document.getElementById('inAppWarn').style.display = 'block';
         }
 
         // Carrega info de versão de version.json (atualizado pelo publicar.bat)
