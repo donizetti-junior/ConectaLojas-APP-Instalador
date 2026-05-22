@@ -174,13 +174,20 @@
         <p class="subtitle">Plataforma de Conexão entre Lojistas e Clientes</p>
 
         <a href="ConectaLojas.apk" download="ConectaLojas.apk" class="download-btn" id="downloadBtn">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" id="downloadIcon">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Baixar para Android
+            <span id="downloadLabel">Baixar para Android</span>
         </a>
+
+        <!-- Mensagem que aparece logo apos clicar pra atualizar — dica visual
+             pra Android antigo que nao mostra barra de download na propria pagina. -->
+        <p id="downloadHint" style="display:none;margin-top:12px;font-size:13px;color:#065f46;background:#d1fae5;padding:10px 12px;border-radius:10px;line-height:1.4;text-align:left;">
+            <strong>Download iniciado!</strong><br>
+            Verifique a <strong>barra de notificacoes</strong> do seu celular (arraste de cima pra baixo) e toque no arquivo <strong>ConectaLojas.apk</strong> quando concluir.
+        </p>
 
         <!-- Fallback: alguns browsers embarcados (Instagram/Facebook/WhatsApp) bloqueiam
              download de APK. O texto so aparece se a deteccao do user-agent confirmar. -->
@@ -221,10 +228,6 @@
             <div class="step-text">Pronto! Abra o app <strong>ConectaLojas</strong> no menu.</div>
         </div>
 
-        <div class="warning">
-            <strong>Versão de teste.</strong> Este app está em desenvolvimento. Se encontrar algum problema, avise!
-        </div>
-
         <p class="footer">© ConectaLojas</p>
     </div>
 
@@ -243,6 +246,19 @@
         if (isInAppBrowser && !isIOS) {
             document.getElementById('inAppWarn').style.display = 'block';
         }
+
+        // Feedback visual quando clicar em Baixar — Android antigo nao mostra
+        // barra de download na propria pagina, entao orientamos a verificar a
+        // barra de notificacoes do sistema.
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            if (isIOS) return;
+            document.getElementById('downloadLabel').textContent = 'Baixando...';
+            document.getElementById('downloadHint').style.display = 'block';
+            // Reverte o label depois de 8s, pra caso o usuario queira clicar de novo
+            setTimeout(function() {
+                document.getElementById('downloadLabel').textContent = 'Baixar para Android';
+            }, 8000);
+        });
 
         // Carrega info de versão de version.json (atualizado pelo publicar.bat)
         fetch('version.json?_=' + Date.now())
