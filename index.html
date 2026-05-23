@@ -142,6 +142,24 @@
             line-height: 1.4;
         }
 
+        /* Dica de limpeza, aparece após o user clicar em baixar */
+        .cleanup-tip {
+            margin-top: 14px;
+            padding: 12px 14px;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: left;
+            line-height: 1.5;
+            animation: fadeInTip 0.3s ease-out;
+        }
+        .cleanup-tip strong { color: #064e3b; }
+        @keyframes fadeInTip {
+            from { opacity: 0; transform: translateY(-4px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
         .ios-notice {
             display: none;
             margin-top: 20px;
@@ -173,7 +191,7 @@
         <h1>ConectaLojas</h1>
         <p class="subtitle">Plataforma de Conexão entre Lojistas e Clientes</p>
 
-        <a href="ConectaLojas.apk" download="ConectaLojas.apk" class="download-btn" id="downloadBtn">
+        <a href="javascript:void(0)" class="download-btn" id="downloadBtn">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -181,6 +199,11 @@
             </svg>
             Baixar para Android
         </a>
+
+        <!-- Dica de limpeza dos APKs antigos. Aparece so depois do user clicar em baixar. -->
+        <div class="cleanup-tip" id="cleanupTip" style="display:none;">
+            💡 <strong>Ja baixou antes?</strong> Voce pode deletar APKs antigos da pasta <strong>Downloads</strong> do celular pra liberar espaco. O ConectaLojas continua funcionando normalmente depois de instalado &mdash; o arquivo .apk so e necessario na hora da instalacao.
+        </div>
 
         <!-- Fallback: alguns browsers embarcados (Instagram/Facebook/WhatsApp) bloqueiam
              download de APK. O texto so aparece se a deteccao do user-agent confirmar. -->
@@ -240,21 +263,55 @@
             document.getElementById('inAppWarn').style.display = 'block';
         }
 
-        // Carrega info de versão de version.json (atualizado pelo publicar.bat)
+        // Carrega info de versão de version.json (atualizado pelo publicar.bat).
+        // O arquivo no servidor tem nome versionado (ConectaLojas-vX.Y.Z.apk),
+        // mas o atributo `download` é reescrito no clique pra incluir timestamp
+        // em milissegundos — assim cada download tem nome único e o Android
+        // não pergunta "ja existe arquivo, quer substituir?".
         fetch('version.json?_=' + Date.now())
             .then(r => r.ok ? r.json() : null)
             .then(data => {
-                const el = document.getElementById('versionInfo');
-                if (data) {
-                    el.textContent = `Versão ${data.version} · Publicado em ${data.date}`;
-                    // Cache-bust no link do APK pra evitar baixar versão antiga
-                    document.getElementById('downloadBtn').href = 'ConectaLojas.apk?v=' + encodeURIComponent(data.version);
-                } else {
-                    el.textContent = '';
+                const versionEl = document.getElementById('versionInfo');
+                const btn = document.getElementById('downloadBtn');
+                if (!data || !data.version) {
+                    versionEl.textContent = 'Erro ao carregar a versão.';
+                    btn.style.pointerEvents = 'none';
+                    btn.style.opacity = '0.5';
+                    return;
                 }
+
+                versionEl.textContent = `Versão ${data.version} · Publicado em ${data.date}`;
+
+                // Nome do arquivo no servidor (preferindo apkFile do version.json)
+                const apkFile = data.apkFile || ('ConectaLojas-v' + data.version + '.apk');
+                btn.href = apkFile + '?v=' + encodeURIComponent(data.version);
+
+                // No momento do clique, reescreve `download` com versão + timestamp ms.
+                // Resultado: ConectaLojas-v1.0.22-20260523-170815-432.apk (sempre único).
+                btn.addEventListener('click', function() {
+                    const now = new Date();
+                    const pad = n => String(n).padStart(2, '0');
+                    const ts = now.getFullYear()
+                             + pad(now.getMonth() + 1)
+                             + pad(now.getDate())
+                             + '-'
+                             + pad(now.getHours())
+                             + pad(now.getMinutes())
+                             + pad(now.getSeconds())
+                             + '-'
+                             + String(now.getMilliseconds()).padStart(3, '0');
+                    btn.download = 'ConectaLojas-v' + data.version + '-' + ts + '.apk';
+
+                    // Revela a dica de limpeza após o primeiro clique no download
+                    const tip = document.getElementById('cleanupTip');
+                    if (tip) tip.style.display = 'block';
+                });
             })
             .catch(() => {
-                document.getElementById('versionInfo').textContent = '';
+                document.getElementById('versionInfo').textContent = 'Erro ao carregar a versão.';
+                const btn = document.getElementById('downloadBtn');
+                btn.style.pointerEvents = 'none';
+                btn.style.opacity = '0.5';
             });
     </script>
 </body>
