@@ -76,6 +76,16 @@
             box-shadow: 0 6px 20px 0 rgba(5, 150, 105, 0.4);
         }
 
+        /* Cooldown anti-clique-repetido: botão fica inativo por alguns segundos
+           após o clique (o download em si continua normal). */
+        .download-btn.is-disabled {
+            pointer-events: none;
+            opacity: 0.6;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+        }
+
         .version-info {
             margin-top: 14px;
             font-size: 13px;
@@ -197,7 +207,7 @@
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Baixar para Android
+            <span id="downloadBtnLabel">Baixar para Android</span>
         </a>
 
         <!-- Dica de limpeza dos APKs antigos. Aparece so depois do user clicar em baixar. -->
@@ -305,6 +315,27 @@
                     // Revela a dica de limpeza após o primeiro clique no download
                     const tip = document.getElementById('cleanupTip');
                     if (tip) tip.style.display = 'block';
+
+                    // Anti-clique repetido: desativa o botão por 10s. O download
+                    // DESTA vez segue normal (não há preventDefault) — só os cliques
+                    // seguintes ficam bloqueados (pointer-events:none via .is-disabled).
+                    if (!btn.classList.contains('is-disabled')) {
+                        const label = document.getElementById('downloadBtnLabel');
+                        const textoOriginal = label ? label.textContent : '';
+                        let restante = 10;
+                        btn.classList.add('is-disabled');
+                        if (label) label.textContent = 'Aguarde ' + restante + 's...';
+                        const intervalo = setInterval(function() {
+                            restante--;
+                            if (restante > 0) {
+                                if (label) label.textContent = 'Aguarde ' + restante + 's...';
+                            } else {
+                                clearInterval(intervalo);
+                                btn.classList.remove('is-disabled');
+                                if (label) label.textContent = textoOriginal;
+                            }
+                        }, 1000);
+                    }
                 });
             })
             .catch(() => {
